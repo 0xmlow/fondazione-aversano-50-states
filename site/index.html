@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>50 States · The Field — Fondazione Aversano</title>
+<meta name="description" content="Fondazione Aversano's 50 States collection, installed across a walkable map of America on the Marfa desert floor. 145 artists, 200 works, every state.">
+<link rel="icon" href="assets/brand/fa_logo.png" type="image/png">
+<link rel="stylesheet" href="assets/field.css?b=1790918187050">
+</head>
+<body>
+<div id="world"></div>
+
+<header id="hud">
+  <div class="brand">
+    <img src="assets/brand/fa_ink.png" alt="">
+    <div><b>FONDAZIONE AVERSANO</b><span>50 STATES · THE FIELD</span></div>
+  </div>
+  <div class="chips">
+    <span id="where">MARFA · THE HALL</span>
+    <span id="clock">MARFA</span>
+  </div>
+</header>
+
+<nav id="bar" aria-label="Gallery controls">
+  <button id="mapbtn" title="See all fifty from above (M)">MAP</button>
+  <button id="statesbtn" title="Every state">STATES</button>
+  <button id="prevbtn" title="Previous work (K)" aria-label="Previous work">&larr;</button>
+  <button id="nextbtn" title="Next work (J)">NEXT WORK &rarr;</button>
+  <button id="tourbtn" title="The whole country in one drive (T)">ROAD TRIP</button>
+  <button id="timebtn" title="Change the light (L)">LIVE LIGHT</button>
+  <button id="soundbtn" title="Wind and the freight train">SOUND</button>
+  <button id="homebtn" title="Back to the hall in Marfa (H)">MARFA</button>
+  <button id="aboutbtn" title="About">ABOUT</button>
+</nav>
+
+<div id="stick" aria-hidden="true"><i></i></div>
+<div id="flash" role="status" aria-live="polite"></div>
+<div id="maplabels" hidden></div>
+
+<section id="gate">
+  <div class="gate-card">
+    <img class="crest" src="assets/brand/fa_logo.png" alt="Fondazione Aversano crest">
+    <p class="kicker">Fondazione Aversano · Program One</p>
+    <h1>50 States.<br>The Field.</h1>
+    <p class="lede">The Foundation's collection, installed across a walkable map of America drawn into the Marfa desert. Every state is a concrete pavilion standing where the state is, holding the work the Foundation acquired there.</p>
+    <p class="stats" id="gate-stats"></p>
+    <button id="enter">ENTER THE FIELD</button>
+    <p class="help">Drag to look · W A S D or the stick to walk · Shift to run · tap a work to read it · M for the map · J for the next work</p>
+  </div>
+</section>
+
+<aside id="detail" class="drawer" aria-hidden="true">
+  <button class="x" data-close="detail" aria-label="Close">&times;</button>
+  <div id="detail-body"></div>
+</aside>
+
+<aside id="states" class="panel">
+  <button class="x" data-close="panel" aria-label="Close">&times;</button>
+  <p class="kicker">Every place in the collection</p>
+  <h2>The fifty, and four more</h2>
+  <input id="states-q" type="search" placeholder="Find a state or an artist" autocomplete="off">
+  <div id="states-list"></div>
+</aside>
+
+<aside id="about" class="panel">
+  <button class="x" data-close="panel" aria-label="Close">&times;</button>
+  <p class="kicker">About the field</p>
+  <h2>America, seen through its artists</h2>
+  <p>In September 2026 Fondazione Aversano set out to collect one artist from every state. It ended with 145 artists, 200 works and all fifty states, plus Washington DC, Puerto Rico, Guam and Midway, each acquisition recorded on Ethereum, Tezos or Bitcoin.</p>
+  <p>The field takes its idea from Donald Judd's Chinati Foundation in Marfa, Texas, where fifteen concrete works stand in a line across the land and two old artillery sheds hold a hundred boxes of aluminum. Here the line becomes the map. Each state is a concrete pavilion open at both ends, set where the state lies. The largest collections stand in Quonset vaulted sheds. You arrive in a reborn artillery shed in Marfa, where an aluminum box for every place leads you to it.</p>
+  <p>The light follows the Marfa clock. Look south after dark.</p>
+  <p class="muted small">Artworks are the copyright of their artists and are shown for non-commercial, educational display. Records from <a href="https://fondazioneaversano.org/50-states/" target="_blank" rel="noopener">fondazioneaversano.org</a>. A virtual gallery by MLow.</p>
+</aside>
+
+<div id="lost" hidden><p>The graphics card dropped the gallery. <button onclick="location.reload()">Reload</button></p></div>
+
+<script src="assets/data.js"></script>
+<script src="assets/field.js?b=1790918187050"></script>
+</body>
+</html>

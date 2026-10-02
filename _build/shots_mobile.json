@@ -1,0 +1,1 @@
+[{"name":"m1_mobile_arrival","wait":4},{"name":"m2_mobile_gate","eval":"document.querySelector(\"#gate\").classList.remove(\"gone\")","wait":1}]

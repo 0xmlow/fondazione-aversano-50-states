@@ -1,0 +1,11 @@
+[
+ {"name": "01_arrival", "wait": 4},
+ {"name": "02_hall_south_facade", "eval": "__fa.look(-168,1.68,282,0,7)", "wait": 3},
+ {"name": "03_relic", "eval": "__fa.look(-165.5,1.68,190,32,-6)", "wait": 3},
+ {"name": "04_arizona", "eval": "(()=>{const p=__fa.world.pavs.find(p=>p.place.usps==='AZ');__fa.look(p.x,1.68,p.z+p.l/2-1.5,0,-3)})()", "wait": 6},
+ {"name": "05_newyork_shed", "eval": "(()=>{const p=__fa.world.pavs.find(p=>p.place.usps==='NY');__fa.look(p.x-4.3,1.68,p.z+p.l/2-2,8,-2)})()", "wait": 8},
+ {"name": "06_newyork_exterior", "eval": "(()=>{const p=__fa.world.pavs.find(p=>p.place.usps==='NY');__fa.look(p.x+14,1.68,p.z+p.l/2+22,30,4)})()", "wait": 4},
+ {"name": "07_lookout", "eval": "__fa.look(-19,1.68,0,33.7,16)", "wait": 3},
+ {"name": "08_rhode_island_box", "eval": "(()=>{const p=__fa.world.pavs.find(p=>p.place.usps==='WY');__fa.look(p.x+9,1.68,p.z+p.l/2+9,40,2)})()", "wait": 5},
+ {"name": "09_map", "eval": "__fa.map()", "wait": 5}
+]

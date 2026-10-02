@@ -1,0 +1,1 @@
+[{"name":"09_map","eval":"__fa.map()","wait":6},{"name":"10_golden_arizona","eval":"(()=>{const p=__fa.world.pavs.find(p=>p.place.usps===\"AZ\");__fa.look(p.x+7,1.68,p.z+p.l/2+15,22,4)})()","wait":5}]

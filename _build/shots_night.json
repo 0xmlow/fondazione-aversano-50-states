@@ -1,0 +1,6 @@
+[
+ {"name": "n1_hall_from_north", "eval": "__fa.look(-160,1.68,168,160,6)", "wait": 4},
+ {"name": "n2_marfa_lights", "eval": "__fa.look(-110,1.68,312,180,3)", "wait": 4},
+ {"name": "n3_arizona_night", "eval": "(()=>{const p=__fa.world.pavs.find(p=>p.place.usps==='AZ');__fa.look(p.x+6,1.68,p.z+p.l/2+14,20,3)})()", "wait": 5},
+ {"name": "n4_map_night", "eval": "__fa.map()", "wait": 5}
+]
