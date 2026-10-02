@@ -431,8 +431,10 @@ export function buildWorld(k: Kit, renderer: T.WebGLRenderer, opts: { quality: '
     const n = p.works.length;
     const pav: Pav = { place: p, x, z, w: W, l: L, kind: p.kind, mouth: v(x, 0, z + L / 2 + 5), enter: v(x, 0, z + L / 2 - 1.5), look: v(x, 1.6, z - L), pick: null as unknown as T.Mesh, hung: [], decor: [] };
     sink = pav.decor;
-    if (p.kind === 'box') {
-      const t = 0.3, H = 3.4, lin = 0.8, slot = 1.1, half = (W - slot) / 2;
+    const isBox = p.kind === 'box';
+    const t = isBox ? 0.3 : 0.5, H = isBox ? 3.4 : 4.2;
+    if (isBox) {
+      const lin = 0.8, slot = 1.1, half = (W - slot) / 2;
       k.box(t, H, L, x - W / 2 + t / 2, H / 2, z, conc);
       k.box(t, H, L, x + W / 2 - t / 2, H / 2, z, conc);
       k.box(half, 0.3, L, x - slot / 2 - half / 2, H + 0.15, z, conc);
@@ -442,26 +444,15 @@ export function buildWorld(k: Kit, renderer: T.WebGLRenderer, opts: { quality: '
       for (const s of [-1, 1]) k.box(0.12, 0.04, L - 0.6, x + s * (slot / 2 + 0.12), H - 0.02, z, glowWarm);
       k.block(x - W / 2 - R, x - W / 2 + t + R, z - L / 2 - R, z + L / 2 + R);
       k.block(x + W / 2 - t - R, x + W / 2 + R, z - L / 2 - R, z + L / 2 + R);
-      /* two long walls, one work per bay per wall */
-      const bays = Math.ceil(n / 2), pitch = 5.0;
-      const zs = (b: number) => z - ((bays - 1) * pitch) / 2 + b * pitch;
-      const xw = x - W / 2 + t + 0.005, xe = x + W / 2 - t - 0.005;
-      p.works.forEach((wi, j) => {
-        const west = n === 1 || j % 2 === 0;
-        const b = n === 1 ? 0 : Math.floor(j / 2);
-        const zz = n === 1 ? z : zs(b);
-        const at = v(west ? xw : xe, 1.9, zz);
-        pav.hung.push(hang(p, wi, at, v(west ? x + 1.6 : x - 1.6, 1.6, zz), 3.5, 2.3, 'gap'));
-      });
-      if (n === 1) signAt(word(Q(p.name), 1024, 160, '#2a2622', 96, { track: 4 }), 4.6, 0.72, xe - 0.01, 2.0, z, -Math.PI / 2);
       /* the name cut into each lintel, outside */
       for (const s of [-1, 1]) {
         signAt(word(Q(p.name), 1024, 128, '#2a2622', 70, { track: 6 }), W * 0.86, W * 0.86 * 0.125, x, H - lin / 2, z + s * (L / 2 + 0.012), s > 0 ? 0 : Math.PI);
       }
+      if (!p.bays.some((b) => b.side > 0)) signAt(word(Q(p.name), 1024, 160, '#2a2622', 96, { track: 4 }), Math.min(4.6, L - 2), Math.min(4.6, L - 2) / 6.4, x + W / 2 - t - 0.01, 2.0, z, -Math.PI / 2);
       plaque(p, x + W / 2 + 1.3, z + L / 2 + 1.6, 0.35);
     } else {
-      /* an artillery shed: brick walls, a Quonset vault, a spine wall down the middle */
-      const t = 0.5, H = 4.2, rise = 4.4, door = 6.4, doorH = 3.4;
+      /* an artillery shed: brick walls, a Quonset vault, an open nave lined with artist alcoves */
+      const rise = 4.4, door = 6.4, doorH = 3.4;
       k.box(t, H, L, x - W / 2 + t / 2, H / 2, z, brick);
       k.box(t, H, L, x + W / 2 - t / 2, H / 2, z, brick);
       for (const s of [-1, 1]) {
@@ -469,7 +460,6 @@ export function buildWorld(k: Kit, renderer: T.WebGLRenderer, opts: { quality: '
         k.box(pw, H, t, x - door / 2 - pw / 2, H / 2, ez, brick);
         k.box(pw, H, t, x + door / 2 + pw / 2, H / 2, ez, brick);
         k.box(door, H - doorH, t, x, (H + doorH) / 2, ez, brick);
-        /* the glazed half ellipse that closes the vault */
         const sh = new T.Shape();
         sh.absellipse(0, 0, W / 2, rise, 0, Math.PI, false);
         const gg = k.mesh(new T.ShapeGeometry(sh, 32), glass, x, H, ez, true);
@@ -487,31 +477,67 @@ export function buildWorld(k: Kit, renderer: T.WebGLRenderer, opts: { quality: '
       k.block(x - W / 2 - R, x - W / 2 + t + R, z - L / 2, z + L / 2);
       k.block(x + W / 2 - t - R, x + W / 2 + R, z - L / 2, z + L / 2);
       for (const dx of [-W / 4, 0, W / 4]) k.box(0.18, 0.05, L - 4, x + dx, H + (dx === 0 ? rise - 0.12 : rise * 0.82), z, glowWarm);
-      const bays = Math.ceil(n / 4), pitch = 6.4, spineL = bays * pitch;
-      k.box(0.4, 3.6, spineL, x, 1.8, z, plaster);
-      k.block(x - 0.2 - R, x + 0.2 + R, z - spineL / 2 - R, z + spineL / 2 + R);
-      for (const s of [-1, 1]) {
-        const tex = card([
-          { t: Q(p.name), size: 64, weight: '700', gap: 10 },
-          { t: `${p.artists.length} ARTISTS  ·  ${n} WORKS`, size: 28, color: SIENNA, weight: '600', track: 3 },
-        ], 1024, 300, BONE, '');
-        signAt(tex, 3.0, 0.88, x, 2.0, z + s * (spineL / 2 + 0.012), s > 0 ? 0 : Math.PI);
-      }
-      const rows = [
-        { x: x - W / 2 + t + 0.005, tx: x - 2 },
-        { x: x - 0.205, tx: x - 4 },
-        { x: x + 0.205, tx: x + 4 },
-        { x: x + W / 2 - t - 0.005, tx: x + 2 },
-      ];
-      const zs = (b: number) => z - ((bays - 1) * pitch) / 2 + b * pitch;
-      p.works.forEach((wi, j) => {
-        const b = Math.floor(j / 4), r = rows[j % 4];
-        pav.hung.push(hang(p, wi, v(r.x, 2.05, zs(b)), v(r.tx, 1.6, zs(b)), 4.4, 2.7, 'steel'));
-      });
+      /* the introduction wall just inside the south door: every artist in the room, by name */
+      const iz = z + L / 2 - 3.6;
+      k.box(4.4, 2.9, 0.24, x, 1.45, iz, plaster);
+      k.block(x - 2.2 - R, x + 2.2 + R, iz - 0.12 - R, iz + 0.12 + R);
+      const intro = card([
+        { t: Q(p.name), size: 70, weight: '700', gap: 8 },
+        { t: `${p.artists.length} ${p.artists.length === 1 ? 'ARTIST' : 'ARTISTS'}  \u00B7  ${n} WORKS`, size: 30, color: SIENNA, weight: '600', gap: 26, track: 3 },
+        { t: p.artists.join('  \u00B7  '), size: p.artists.length > 12 ? 30 : 36, gap: 20 },
+        { t: 'EACH ARTIST HAS A BAY OF THEIR OWN. WALK THE NAVE.', size: 20, color: MUTED, weight: '600', track: 3 },
+      ], 1024, 680, BONE, SIENNA);
+      for (const s of [-1, 1]) signAt(intro, 4.0, 4.0 * 680 / 1024, x, 1.55, iz + s * 0.125, s > 0 ? 0 : Math.PI);
       plaque(p, x + door / 2 + 1.6, z + L / 2 + 2.0, 0.3);
-      pav.enter = v(x - 4.3, 0, z + L / 2 - 2);
-      pav.look = v(x - 4.3, 1.6, z - L);
     }
+
+    /* ---------- the artists' bays ---------- */
+    const finD = isBox ? 0.9 : 2.2, finH = isBox ? H : 3.9, slot = isBox ? 3.9 : 4.6, pad = isBox ? 0.9 : 1.2;
+    const artY = isBox ? 1.62 : 1.95, mh = isBox ? 2.0 : 2.5, headY = isBox ? 2.98 : 3.62, headH = isBox ? 0.4 : 0.5;
+    const finMat = isBox ? conc : plaster;
+    const finsDone = new Set<string>();
+    const zOf = (s: number) => z + L / 2 - s;
+    for (const b of p.bays) {
+      const side = b.side;
+      const wx = side < 0 ? x - W / 2 + t : x + W / 2 - t;
+      const zs = zOf(b.s0), zn = zOf(b.s1);
+      for (const zf of [zs, zn]) {
+        const key = side + ':' + zf.toFixed(2);
+        if (finsDone.has(key)) continue;
+        finsDone.add(key);
+        const fx = wx - side * finD / 2;
+        k.box(finD, finH, 0.2, fx, finH / 2, zf, finMat);
+        k.block(fx - finD / 2 - R, fx + finD / 2 + R, zf - 0.1 - R, zf + 0.1 + R);
+      }
+      const rotY = side < 0 ? Math.PI / 2 : -Math.PI / 2;
+      b.works.forEach((wi, j) => {
+        const zz = zs - pad / 2 - slot / 2 - j * slot;
+        pav.hung.push(hang(p, wi, v(wx - side * 0.005, artY, zz), v(wx - side * 3.2, 1.6, zz), slot - 1.2, mh, isBox ? 'gap' : 'steel'));
+      });
+      /* the artist's name over their work, in the house title panel */
+      const bw = Math.min(zs - zn - pad - 0.2, isBox ? 3.6 : 4.4);
+      const nWorks = p.works.filter((wi) => WORKS[wi].artist === b.artist).length;
+      const head = canvasTex(1024, Math.round(1024 * headH / bw), (g) => {
+        const hh = g.canvas.height;
+        g.fillStyle = BONE;
+        g.fillRect(0, 0, 1024, hh);
+        g.fillStyle = SIENNA;
+        g.fillRect(0, 0, 1024, Math.max(4, hh * 0.04));
+        g.textAlign = 'center';
+        g.textBaseline = 'middle';
+        g.fillStyle = INK;
+        let size = Math.min(hh * 0.46, 92);
+        g.font = `700 ${size}px ${SANS}`;
+        while (g.measureText(b.artist).width > 940 && size > 20) { size -= 2; g.font = `700 ${size}px ${SANS}`; }
+        g.fillText(b.artist, 512, hh * 0.42);
+        g.fillStyle = SIENNA;
+        g.font = `600 ${Math.min(hh * 0.17, 30)}px ${SANS}`;
+        if ('letterSpacing' in g) (g as unknown as { letterSpacing: string }).letterSpacing = '4px';
+        g.fillText(`${nWorks} ${nWorks === 1 ? 'WORK' : 'WORKS'}  \u00B7  ${p.name.toUpperCase()}`, 512, hh * 0.8);
+      });
+      signAt(head, bw, headH, wx - side * 0.02, headY, (zs + zn) / 2, rotY);
+    }
+    if (!isBox) { pav.enter = v(x, 0, z + L / 2 - 2); pav.look = v(x, 1.6, z - L); }
     /* light spilling out of both mouths after dark */
     for (const s of [-1, 1]) {
       const m = new T.Matrix4().compose(v(x, 0.02, z + s * (L / 2 + 2.4)), new T.Quaternion().setFromEuler(new T.Euler(-Math.PI / 2, 0, 0)), v(W * 0.9, 4.8, 1));
@@ -612,22 +638,34 @@ export function buildWorld(k: Kit, renderer: T.WebGLRenderer, opts: { quality: '
 
     /* the directory: Judd's aluminum boxes, one per place, its first work under glass on the lid */
     const byName = PLACES.slice().sort((a, b) => a.name.localeCompare(b.name));
-    const rowsX = [-6.2, 0, 6.2], per = Math.ceil(byName.length / rowsX.length), pitchZ = 2.3;
-    /* one instanced body, one atlas for every word on every box: two draw calls instead of two hundred */
-    const COLS = 4, CW = 512, CH = 128, rowsA = Math.ceil(byName.length / COLS);
-    const atlas = canvasTex(CW * COLS, CH * rowsA * 2, (g) => {
+    /* Lecterns, after the client's sketch: low at the front, high at the back, the work laid on the
+       slope so it faces you as you walk the nave. Nothing rises above 1.25 m, so the hall stays open
+       end to end. Two rows face a clear central nave; A to M on the west, the rest on the east. */
+    const plinth = k.flat(0xeeebe5, 0, 0.82);
+    const per = Math.ceil(byName.length / 2), pitchZ = 1.55, LO = 0.78, HI = 1.25, DEP = 0.9, WID = 1.3;
+    const lect = (f: number) => {
+      const sh = new T.Shape([new T.Vector2(-DEP / 2, 0), new T.Vector2(DEP / 2, 0), new T.Vector2(DEP / 2, f > 0 ? LO : HI), new T.Vector2(-DEP / 2, f > 0 ? HI : LO)]);
+      const g = new T.ExtrudeGeometry(sh, { depth: WID, bevelEnabled: true, bevelSize: 0.015, bevelThickness: 0.015, bevelSegments: 1 });
+      g.translate(0, 0, -WID / 2);
+      return g;
+    };
+    const COLS = 4, CW = 512, CH = 200, rowsA = Math.ceil(byName.length / COLS);
+    const atlas = canvasTex(CW * COLS, CH * rowsA, (g) => {
       g.textBaseline = 'middle';
+      g.textAlign = 'center';
       byName.forEach((p, i) => {
-        const cx = (i % COLS) * CW, cy = Math.floor(i / COLS) * CH * 2;
-        g.fillStyle = '#3a3a3a';
-        g.textAlign = 'center';
-        g.font = `700 40px ${SANS}`;
-        if ('letterSpacing' in g) (g as unknown as { letterSpacing: string }).letterSpacing = '7px';
-        g.fillText(p.name.toUpperCase() + '  \u00B7  ' + p.works.length, cx + CW / 2, cy + CH / 2, CW * 0.94);
-        g.font = `700 76px ${SANS}`;
-        if ('letterSpacing' in g) (g as unknown as { letterSpacing: string }).letterSpacing = '8px';
+        const cx = (i % COLS) * CW, cy = Math.floor(i / COLS) * CH;
         g.fillStyle = '#262626';
-        g.fillText(p.usps, cx + CW / 2, cy + CH * 1.5, CW * 0.9);
+        let size = 50;
+        g.font = `700 ${size}px ${SANS}`;
+        if ('letterSpacing' in g) (g as unknown as { letterSpacing: string }).letterSpacing = '5px';
+        while (g.measureText(p.name.toUpperCase()).width > CW * 0.92 && size > 24) { size -= 2; g.font = `700 ${size}px ${SANS}`; }
+        g.fillText(p.name.toUpperCase(), cx + CW / 2, cy + CH * 0.36);
+        g.fillStyle = SIENNA;
+        g.font = `600 28px ${SANS}`;
+        if ('letterSpacing' in g) (g as unknown as { letterSpacing: string }).letterSpacing = '3px';
+        const na = p.artists.length, nw = p.works.length;
+        g.fillText(`${na} ${na === 1 ? 'ARTIST' : 'ARTISTS'}  \u00B7  ${nw} ${nw === 1 ? 'WORK' : 'WORKS'}`, cx + CW / 2, cy + CH * 0.72);
       });
     });
     const lp: number[] = [], lu: number[] = [];
@@ -637,39 +675,47 @@ export function buildWorld(k: Kit, renderer: T.WebGLRenderer, opts: { quality: '
         lu.push(uu, vv);
       }
     };
-    const bodies = new T.InstancedMesh(new T.BoxGeometry(1.83, 1.04, 1.3), alu, byName.length);
+    const rows = [
+      { f: 1, x: x - 3.4, mesh: new T.InstancedMesh(lect(1), plinth, per), ids: [] as number[] },
+      { f: -1, x: x + 3.4, mesh: new T.InstancedMesh(lect(-1), plinth, byName.length - per), ids: [] as number[] },
+    ];
+    const slopeLen = Math.hypot(DEP, HI - LO);
     byName.forEach((p, i) => {
-      const r = Math.floor(i / per), j = i % per;
-      const bx = x + rowsX[r], bzz = z - L / 2 + 5.5 + j * pitchZ;
-      bodies.setMatrixAt(i, new T.Matrix4().makeTranslation(bx, 0.52, bzz));
-      const top = new T.Mesh(new T.PlaneGeometry(1.2, 0.8), new T.MeshBasicMaterial({ color: new T.Color().setHSL(((WORKS[p.works[0]]?.hue) || 20) / 360, 0.2, 0.3), toneMapped: false }));
-      top.rotation.x = -Math.PI / 2;
-      top.position.set(bx - 0.18, 1.045, bzz);
+      const row = rows[i < per ? 0 : 1], j = i < per ? i : i - per, f = row.f;
+      const bx = row.x, bzz = z + L / 2 - 6 - j * pitchZ;
+      row.mesh.setMatrixAt(j, new T.Matrix4().makeTranslation(bx, 0, bzz));
+      row.ids.push(dir.length);
+      /* the work on the slope: right is along -f z, up runs up the slope toward the back */
+      const right = v(0, 0, -f), up = v(-f * DEP, HI - LO, 0).normalize(), nrm = new T.Vector3().crossVectors(right, up);
+      const top = new T.Mesh(new T.PlaneGeometry(1, 1), new T.MeshBasicMaterial({ color: new T.Color().setHSL(((WORKS[p.works[0]]?.hue) || 20) / 360, 0.2, 0.3), toneMapped: false }));
+      top.quaternion.setFromRotationMatrix(new T.Matrix4().makeBasis(right, up, nrm));
+      top.position.set(bx, (LO + HI) / 2 + 0.02, bzz).addScaledVector(nrm, 0.012);
+      const fw = WID - 0.14, fh = slopeLen - 0.16;
+      top.scale.set(fw, fh, 1);
       top.userData.dir = dir.length;
+      top.userData.fit = [fw, fh];
       k.add(top);
       hallDecor.push(top);
-      const cu = (i % COLS) / COLS, cu1 = cu + 1 / COLS, rowV = Math.floor(i / COLS);
-      const vTop = 1 - (rowV * 2) / (rowsA * 2), vMid = 1 - (rowV * 2 + 1) / (rowsA * 2), vBot = 1 - (rowV * 2 + 2) / (rowsA * 2);
-      for (const s of [-1, 1]) {
-        const zf = bzz + s * 0.652, hw = 0.85 * s, y0 = 0.64, y1 = 0.92;
-        // a plane facing +z (s=1) or -z (s=-1): corners top-left, bottom-left, bottom-right, top-right as seen from outside
-        quad([v(bx - hw, y1, zf), v(bx - hw, y0, zf), v(bx + hw, y0, zf), v(bx + hw, y1, zf)], cu, vMid, cu1, vTop);
-      }
-      // the code on the lid, read from the aisle on the east
-      const tx = bx + 0.66, ty = 1.046;
-      quad([v(tx - 0.15, ty, bzz + 0.62), v(tx + 0.15, ty, bzz + 0.62), v(tx + 0.15, ty, bzz - 0.62), v(tx - 0.15, ty, bzz - 0.62)], cu, vBot, cu1, vMid);
-      k.block(bx - 0.92 - 0.3, bx + 0.92 + 0.3, bzz - 0.65 - 0.3, bzz + 0.65 + 0.3);
-      dir.push({ mesh: bodies as unknown as T.Mesh, top, place: p });
+      /* the name and the count on the low front face, read from the nave */
+      const xf = bx + f * (DEP / 2 + 0.018), zl = bzz + f * 0.6, zr = bzz - f * 0.6;
+      const cu = (i % COLS) / COLS, cu1 = cu + 1 / COLS, rr = Math.floor(i / COLS);
+      const v1 = 1 - rr / rowsA, v0 = 1 - (rr + 1) / rowsA;
+      quad([v(xf, 0.68, zl), v(xf, 0.21, zl), v(xf, 0.21, zr), v(xf, 0.68, zr)], cu, v0, cu1, v1);
+      k.block(bx - DEP / 2 - 0.3, bx + DEP / 2 + 0.3, bzz - WID / 2 - 0.3, bzz + WID / 2 + 0.3);
+      dir.push({ mesh: row.mesh as unknown as T.Mesh, top, place: p });
     });
-    bodies.instanceMatrix.needsUpdate = true;
-    bodies.userData.dirInstanced = true;
-    k.add(bodies);
+    for (const r of rows) {
+      r.mesh.instanceMatrix.needsUpdate = true;
+      r.mesh.userData.ids = r.ids;
+      r.mesh.computeBoundingSphere();
+      k.add(r.mesh);
+    }
     {
       const g = new T.BufferGeometry();
       g.setAttribute('position', new T.Float32BufferAttribute(lp, 3));
       g.setAttribute('uv', new T.Float32BufferAttribute(lu, 2));
       g.computeVertexNormals();
-      const words = new T.Mesh(g, new T.MeshBasicMaterial({ map: atlas, transparent: true, side: T.DoubleSide }));
+      const words = new T.Mesh(g, new T.MeshBasicMaterial({ map: atlas, transparent: true, side: T.DoubleSide, color: 0xdedede }));
       k.add(words);
       hallDecor.push(words);
     }
@@ -683,7 +729,7 @@ export function buildWorld(k: Kit, renderer: T.WebGLRenderer, opts: { quality: '
 
   /* ---------- Arsham: one of Judd's concrete units, excavated a thousand years from now ---------- */
   {
-    const cx = HALL.x - 3.1, cz = HALL.z - HALL.l / 2 - 11;
+    const cx = HALL.x, cz = HALL.z - HALL.l / 2 - 13;
     const vox = 0.25, nx = 10, ny = 10, nz = 20;           // 2.5 x 2.5 x 5 m, Judd's unit
     const mats: T.Matrix4[] = [], cryst: T.Matrix4[] = [];
     const corner = v(1.6, 2.6, -1.4);
@@ -955,8 +1001,8 @@ export function buildWorld(k: Kit, renderer: T.WebGLRenderer, opts: { quality: '
   {
     const hx = HALL.x, hz = HALL.z, hl = HALL.l;
     const tx = PLACES.find((p) => p.usps === 'TX')!;
-    k.crowd([v(hx + 3.1, 0, hz + hl / 2 + 40), v(hx + 3.1, 0, hz + hl / 2 - 2), v(hx + 3.1, 0, hz), v(hx + 3.1, 0, hz - hl / 2 + 2), v(hx + 1, 0, hz - hl / 2 - 6), v(hx + 9, 0, hz - hl / 2 - 20), v(tx.x, 0, tx.z + tx.l / 2 + 4)], 22, { seed: 11, spread: 1.4, colors: people });
-    k.crowd([v(hx - 9.3, 0, hz + hl / 2 - 3), v(hx - 9.3, 0, hz - hl / 2 + 3)], 7, { seed: 12, spread: 0.6, speed: 0.6, colors: people });
+    k.crowd([v(hx + 1.4, 0, hz + hl / 2 + 40), v(hx + 1.4, 0, hz + hl / 2 - 2), v(hx + 1.4, 0, hz), v(hx + 1.4, 0, hz - hl / 2 + 2), v(hx + 4, 0, hz - hl / 2 - 6), v(hx + 9, 0, hz - hl / 2 - 20), v(tx.x, 0, tx.z + tx.l / 2 + 4)], 22, { seed: 11, spread: 1.4, colors: people });
+    k.crowd([v(hx - 7.0, 0, hz + hl / 2 - 3), v(hx - 7.0, 0, hz - hl / 2 + 3)], 7, { seed: 12, spread: 0.6, speed: 0.6, colors: people });
     k.crowd([v(LK.x - 11, 0, LK.z), v(LK.x, 0, LK.z - 11), v(LK.x + 11, 0, LK.z), v(LK.x, 0, LK.z + 11)], 12, { seed: 13, spread: 1.0, closed: true, colors: people });
     for (const p of PLACES) {
       if (p.kind !== 'shed') continue;
@@ -1030,8 +1076,8 @@ export function buildWorld(k: Kit, renderer: T.WebGLRenderer, opts: { quality: '
   }
 
   /* ---------- arrival ---------- */
-  const spawn = v(HALL.x - 3.1, 0, HALL.z + HALL.l / 2 - 3.2);
-  const look = v(HALL.x - 3.1, 1.75, HALL.z - 200);
+  const spawn = v(HALL.x, 0, HALL.z + HALL.l / 2 - 3.2);
+  const look = v(HALL.x, 1.65, HALL.z - 200);
 
   return {
     hung, pavs, dir, lookoutPick: lookoutPick!, lookout, hallDecor, hall: HALL, spawn, look, bounds: D.bounds, eye: 1.68, sky,

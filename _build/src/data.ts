@@ -46,6 +46,7 @@ export type Place = {
   w: number;
   l: number;
   works: number[];
+  bays: { artist: string; side: -1 | 1; s0: number; s1: number; works: number[]; pair: boolean }[];
   rings: [number, number][][];
   artists: string[];
 };

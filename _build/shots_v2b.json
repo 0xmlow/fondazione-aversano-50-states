@@ -1,0 +1,6 @@
+[
+ {"name": "b0_audit", "eval": "JSON.stringify({f:__faAudit.faults})", "wait": 1},
+ {"name": "b1_arrival", "eval": "1", "wait": 3},
+ {"name": "b2_lecterns", "eval": "__fa.look(-166.5,1.68,232,62,-24)", "wait": 3},
+ {"name": "b3_ny_bay", "eval": "(()=>{const h=__fa.world.hung.find(h=>h.place.usps==='NY'&&h.work.artist==='Sarah Meyohas');const i=__fa.world.hung.indexOf(h);const vp=__fa.viewpointOf(i);__fa.look(vp.x+0.8,1.68,vp.z-0.5,Math.atan2(-(h.pos.x-vp.x),-(h.pos.z-vp.z))*180/Math.PI+8,4)})()", "wait": 8}
+]

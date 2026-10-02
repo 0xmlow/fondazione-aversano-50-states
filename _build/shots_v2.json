@@ -1,0 +1,10 @@
+[
+ {"name": "a0_audit", "eval": "JSON.stringify({f:__faAudit.faults,k:__faAudit.byKind,l:__faAudit.list.slice(0,8)})", "wait": 1},
+ {"name": "a1_arrival", "eval": "1", "wait": 3},
+ {"name": "a2_lecterns", "eval": "__fa.look(-166.5,1.68,232,62,-24)", "wait": 3},
+ {"name": "a3_ny_entry", "eval": "(()=>{const p=__fa.world.pavs.find(p=>p.place.usps==='NY');__fa.look(p.x,1.68,p.z+p.l/2+3,0,0)})()", "wait": 6},
+ {"name": "a4_ny_nave", "eval": "(()=>{const p=__fa.world.pavs.find(p=>p.place.usps==='NY');__fa.look(p.x+2,1.68,p.z+p.l/2-8,8,-1)})()", "wait": 8},
+ {"name": "a5_ny_bay", "eval": "(()=>{const h=__fa.world.hung.find(h=>h.place.usps==='NY'&&h.work.artist==='Sarah Meyohas');const i=__fa.world.hung.indexOf(h);const vp=__fa.viewpointOf(i);__fa.look(vp.x+0.8,1.68,vp.z-0.5,Math.atan2(-(h.pos.x-vp.x),-(h.pos.z-vp.z))*180/Math.PI+8,4)})()", "wait": 8},
+ {"name": "a6_florida", "eval": "(()=>{const p=__fa.world.pavs.find(p=>p.place.usps==='FL');__fa.look(p.x,1.68,p.z+p.l/2-1.5,0,-2)})()", "wait": 7},
+ {"name": "a7_wyoming_room", "eval": "(()=>{const p=__fa.world.pavs.find(p=>p.place.usps==='WY');__fa.look(p.x,1.68,p.z+p.l/2-6,0,0)})()", "wait": 8}
+]

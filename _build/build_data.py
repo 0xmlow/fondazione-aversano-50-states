@@ -123,14 +123,41 @@ for i, wk in enumerate(works):
     idx.setdefault(wk['work'], []).append(i)
 
 # ---- pavilions
-def footprint(n):
-    """Judd's concrete works are a serial unit: 2.5 x 2.5 x 5 m. Ours are wider so a work can be stood
-    back from, but keep his proportion of an open ended tube. n works on two long walls."""
-    if n >= 8:
-        bays = math.ceil(n / 4)                 # sheds hang both walls and both faces of a spine
-        return 'shed', 18.0, max(26.0, bays * 6.4 + 8)
-    bays = math.ceil(n / 2)
-    return 'box', 8.4, max(10.0, bays * 5.0 + 4.0)
+# Every artist gets a bay of their own: a stretch of wall between two short fins, their name over
+# their work. An artist with four or more works gets a facing pair of bays, a room of their own.
+BAY = {'box':  {'slot': 3.9, 'pad': 0.9, 'end': 2.6, 'w': 8.4, 'min': 10.0},
+       'shed': {'slot': 4.6, 'pad': 1.2, 'end': 6.5, 'w': 18.0, 'min': 26.0}}
+
+def plan(ids):
+    kind = 'shed' if len(ids) >= 8 else 'box'
+    B = BAY[kind]
+    groups = {}
+    for i in ids:
+        groups.setdefault(works[i]['artist'], []).append(i)
+    order = sorted(groups.items(), key=lambda g: (-len(g[1]), g[0].lower()))
+    cur = {-1: 0.0, 1: 0.0}
+    bays = []
+    for artist, ws in order:
+        k = len(ws)
+        if k >= 4 or (len(order) == 1 and k >= 2):
+            a, b = ws[:(k + 1) // 2], ws[(k + 1) // 2:]
+            width = max(len(a), len(b)) * B['slot'] + B['pad']
+            start = max(cur[-1], cur[1])
+            bays.append({'artist': artist, 'side': -1, 's0': start, 's1': start + width, 'works': a, 'pair': True})
+            bays.append({'artist': artist, 'side': 1, 's0': start, 's1': start + width, 'works': b, 'pair': True})
+            cur[-1] = cur[1] = start + width
+        else:
+            side = -1 if cur[-1] <= cur[1] else 1
+            width = k * B['slot'] + B['pad']
+            bays.append({'artist': artist, 'side': side, 's0': cur[side], 's1': cur[side] + width, 'works': ws, 'pair': False})
+            cur[side] += width
+    run = max(cur.values())
+    L = max(B['min'], run + 2 * B['end'])
+    # centre the run in the pavilion; s runs from the south end northward
+    off = (L - run) / 2
+    for b in bays:
+        b['s0'] = round(b['s0'] + off, 3); b['s1'] = round(b['s1'] + off, 3)
+    return kind, B['w'], round(L, 2), bays
 
 states = []
 for s in D['states']:
@@ -143,10 +170,11 @@ for s in D['states']:
         outline = [[w(*p) for p in simplify(r, 0.6)] for r in rings if abs(area(r)) > 4]
     else:
         c = EXTRA_PX[u]; outline = []
-    kind, W, L = footprint(len(ids))
+    kind, W, L, bays = plan(ids)
+    ids = [i for b in bays for i in b['works']]
     x, z = w(*c)
     states.append({'usps': u, 'name': s['name'], 'region': s['region'], 'extra': s['extra'],
-                   'cx': x, 'cz': z, 'x': x, 'z': z, 'kind': kind, 'w': W, 'l': L, 'works': ids, 'rings': outline,
+                   'cx': x, 'cz': z, 'x': x, 'z': z, 'kind': kind, 'w': W, 'l': L, 'works': ids, 'bays': bays, 'rings': outline,
                    'artists': sorted({works[i]['artist'] for i in ids})})
 
 MARFA = w(*albers(-104.02, 30.31))

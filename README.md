@@ -10,6 +10,13 @@ Other features:
 - **The light** follows the Marfa clock. After dark, look south from the viewing area for the Marfa lights.
 - **Life on the map:** the Union Pacific freight runs along the southern edge, and there are a windmill, turkey vultures, tumbleweeds and visitors.
 
+## v2 (2026-10-02, after client feedback)
+
+- **Lecterns in the hall:** the 54 directory boxes are now white lecterns, following Justin's sketch. They are 0.78 m at the front and 1.25 m at the back, with each place's work laid on the slope facing you. They stand in two rows either side of a clear central nave, so the hall can be seen end to end.
+- **Every artist has their own bay:** a stretch of wall between two short fins, with a title panel carrying their name, number of works and state over their work. An artist with four or more works gets a facing pair of bays, a room of their own (Wyoming is Jacob Vandervelde's room). The sheds lose their spine and become an open nave of alcoves, with an intro wall inside the door naming every artist. The bays are planned in `build_data.py` (`plan()`), and the pavilions lengthen to fit (New York is now 80 m).
+- **Location chip:** names the artist whose bay you are facing.
+- **Road trip and J:** go bay by bay, artist by artist.
+
 ## Run it
 
 ```bash

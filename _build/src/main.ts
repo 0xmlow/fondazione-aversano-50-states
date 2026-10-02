@@ -3,7 +3,7 @@ import * as T from 'three';
 import { Kit } from './kit';
 import * as X from './textures';
 import { Fx } from './fx';
-import { D, PLACES, WORKS, TRIP, TRIP_WORKS, byUsps, media, liveHour, PINNED_HOUR, clockLabel, Place } from './data';
+import { D, PLACES, WORKS, TRIP, byUsps, media, liveHour, PINNED_HOUR, clockLabel, Place } from './data';
 import { buildWorld, makeLabel, dropLabel, WorldBuild, Hung, Pav } from './world';
 import { audit } from './audit';
 
@@ -34,6 +34,8 @@ let mapReturn: { pos: T.Vector3; yaw: number; pitch: number } | null = null;
 let tour = false, tourIdx = -1, tourClock = 0;
 let current = -1;      // the hung work in front of the visitor
 const HUNG_BY_WORK = new Map<number, Hung>();
+/* the road trip: places in driving order, and inside each place the works bay by bay, artist by artist */
+const TRIP_WORKS: number[] = TRIP.flatMap((p) => p.works);
 
 function constrain() {
   const p = camera.position;
@@ -97,7 +99,7 @@ function goToWork(h: Hung, open = false) {
 }
 function goToPlace(p: Pav) {
   if (mapMode) leaveMap(false);
-  const vp = new T.Vector3(p.x + (p.kind === 'shed' ? -4.3 : 0), W.eye, p.z + p.l / 2 + 4.5);
+  const vp = new T.Vector3(p.x, W.eye, p.z + p.l / 2 + 4.5);
   fly(vp, new T.Vector3(vp.x, 1.7, p.z - p.l / 2));
   flash(p.place.name);
 }
@@ -200,7 +202,7 @@ function setStill(h: Hung, level: 1 | 2) {
     h.url = full;
     if (!h.stop) {                 // a moving image keeps the screen; the still waits underneath it
       h.mat.map = t;
-      h.mat.color.set(0xffffff);
+      h.mat.color.set(0xeeeeee);
       h.mat.needsUpdate = true;
       h.lod = level;
     }
@@ -243,7 +245,7 @@ function startMotion(h: Hung) {
     const tex = new T.VideoTexture(vEl);
     tex.colorSpace = T.SRGBColorSpace;
     let live = true;
-    vEl.addEventListener('playing', () => { if (!live) return; h.mat.map = tex; h.mat.color.set(0xffffff); h.mat.needsUpdate = true; }, { once: true });
+    vEl.addEventListener('playing', () => { if (!live) return; h.mat.map = tex; h.mat.color.set(0xeeeeee); h.mat.needsUpdate = true; }, { once: true });
     vEl.play().catch(() => { /* autoplay refused: the still stays up */ });
     h.stop = () => {
       live = false;
@@ -279,7 +281,7 @@ function startMotion(h: Hung) {
             canvas.width = Math.round(image.displayWidth * s);
             canvas.height = Math.round(image.displayHeight * s);
             h.mat.map = tex;
-            h.mat.color.set(0xffffff);
+            h.mat.color.set(0xeeeeee);
             h.mat.needsUpdate = true;
           }
           ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
@@ -353,7 +355,16 @@ function where() {
   else if (Math.abs(x - H.x) < H.w / 2 + 1 && Math.abs(z - H.z) < H.l / 2 + 1) txt = 'MARFA · THE HALL';
   else {
     const pv = W.pavs.find((p) => Math.abs(x - p.x) < p.w / 2 + 1 && Math.abs(z - p.z) < p.l / 2 + 1);
-    if (pv) txt = 'IN ' + pv.place.name.toUpperCase() + ' · ' + pv.place.works.length + (pv.place.works.length === 1 ? ' WORK' : ' WORKS');
+    if (pv) {
+      /* name the artist whose bay the visitor is standing in front of */
+      const fwd = new T.Vector3(-Math.sin(yaw), 0, -Math.cos(yaw));
+      let best: Hung | null = null, bd = 7;
+      for (const h of pv.hung) {
+        const d = Math.hypot(h.pos.x - x, h.pos.z - z);
+        if (d < bd && (h.pos.x - x) * fwd.x + (h.pos.z - z) * fwd.z > 0) { bd = d; best = h; }
+      }
+      txt = pv.place.name.toUpperCase() + ' \u00B7 ' + (best ? best.work.artist.toUpperCase() : pv.place.artists.length + (pv.place.artists.length === 1 ? ' ARTIST' : ' ARTISTS'));
+    }
     else {
       const st = PLACES.find((p) => p.rings.some((r) => inRing(x, z, r)));
       txt = st ? 'CROSSING ' + st.name.toUpperCase() : Math.hypot(x - W.lookout.x, z - W.lookout.z) < 30 ? 'THE MIDDLE' : 'OPEN DESERT';
@@ -555,7 +566,7 @@ function stepWork(dir: number) {
 const ray = new T.Raycaster();
 function tap(nx: number, ny: number) {
   ray.setFromCamera(new T.Vector2(nx, ny), camera);
-  const targets: T.Object3D[] = mapMode ? W.pavs.map((p) => p.pick) : [...W.hung.filter((h) => h.g.visible).map((h) => h.art), ...W.hung.filter((h) => h.label).map((h) => h.label!), W.dir[0].mesh, ...W.dir.map((d) => d.top), W.lookoutPick];
+  const targets: T.Object3D[] = mapMode ? W.pavs.map((p) => p.pick) : [...W.hung.filter((h) => h.g.visible).map((h) => h.art), ...W.hung.filter((h) => h.label).map((h) => h.label!), ...new Set(W.dir.map((d) => d.mesh)), ...W.dir.map((d) => d.top), W.lookoutPick];
   const hits = ray.intersectObjects(targets, false);
   if (mapMode) {
     if (hits[0]) goToPlace(W.pavs[hits[0].object.userData.pav]);
@@ -574,8 +585,8 @@ function tap(nx: number, ny: number) {
       else goToWork(h, true);
       return;
     }
-    if (o.userData.dir !== undefined || o.userData.dirInstanced) {
-      const d = W.dir[o.userData.dirInstanced ? hit.instanceId! : o.userData.dir];
+    if (o.userData.dir !== undefined || o.userData.ids) {
+      const d = W.dir[o.userData.ids ? o.userData.ids[hit.instanceId!] : o.userData.dir];
       const pv = W.pavs.find((p) => p.place === d.place);
       if (pv) goToPlace(pv);
       return;
@@ -801,7 +812,12 @@ function boot() {
   for (const d of W.dir) {
     const w0 = WORKS[d.place.works[0]];
     if (!w0?.img) continue;
-    acquire(media(w0.img)).then((t) => { const m = d.top.material as T.MeshBasicMaterial; m.map = t; m.color.set(0xffffff); m.needsUpdate = true; }).catch(() => { /* stays a colour */ });
+    acquire(media(w0.img)).then((t) => {
+      const m = d.top.material as T.MeshBasicMaterial; m.map = t; m.color.set(0xeeeeee); m.needsUpdate = true;
+      /* fit the work to the slope by its own proportions */
+      const [fw, fh] = d.top.userData.fit as [number, number], ar = w0.ar || 1;
+      if (fw / fh > ar) d.top.scale.set(fh * ar, fh, 1); else d.top.scale.set(fw, fw / ar, 1);
+    }).catch(() => { /* stays a colour */ });
   }
   applyHour();
   if (quality === 'high' && params.get('fx') !== 'off') fx = new Fx(renderer, scene, camera, host.clientWidth, host.clientHeight);
@@ -815,7 +831,7 @@ function boot() {
   const hw = hash.get('work');
   if (hs && byUsps.has(hs)) {
     const pv = W.pavs.find((p) => p.place.usps === hs)!;
-    camera.position.set(pv.x + (pv.kind === 'shed' ? -4.3 : 0), W.eye, pv.z + pv.l / 2 + 4.5);
+    camera.position.set(pv.x, W.eye, pv.z + pv.l / 2 + 4.5);
     const b = anglesTo(camera.position, new T.Vector3(camera.position.x, 1.7, pv.z - pv.l / 2));
     yaw = b.yaw; pitch = b.pitch;
   } else if (hw) {
